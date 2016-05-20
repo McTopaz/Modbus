@@ -2,8 +2,8 @@
 Creates a Modbus TCP request to read one single object.
 
 Input:
-	* function: The Modbus function, in hex.
 	* address: The Modbus slave address.
+    * function: The Modbus function, in hex.
 	* register: The register to read from, in hex.
 	* data type: The data type to read, as a character. See data types.
 	Example: .\ModbusTcpRequest.py <function> <register> <data type>
@@ -94,18 +94,19 @@ if len(sys.argv) < 5:
     sys.exit()
 
 # Get arguments.
-function = sys.argv[1]	# The function.	
-address = sys.argv[2]	# The address (slave address).
+address = sys.argv[1]	# The address (slave address).
+function = sys.argv[2]	# The function.	
 register = sys.argv[3]	# The register.
 dataType = sys.argv[4]	# The data type.
+
+# Check address.
+if address.isdigit() == False or int(address) > 0xFF:
+	print("Error: Invalid address.")
+	sys.exit()
 
 # Check function.
 if function.isdigit() == False or int(function) > 0xFF:
 	print("Error: Invalid function.")
-	sys.exit()
-
-if address.isdigit() == False or int(address) > 0xFF:
-	print("Error: Invalid address.")
 	sys.exit()
 	
 # Check register.
@@ -114,11 +115,11 @@ if register.isdigit == False or int(register) > 0xFFFF:
 	sys.exit()
 
 # Parse parameters to 
+adr = "%02X"%(int(address))				# Get the address as two digit hex value.
 func = "%02X"%(int(function))			# Get function as two digit hex value.
-reg = "%02X"%(int(address))				# Get the address as two digit hex value.
-adr = "%04X"%(int(register))			# Get register as four digit hex value.
+reg = "%04X"%(int(register))			# Get register as four digit hex value.
 count = DataTypeRegisterCount(dataType)	# Get register count based on data type.
 	
 # Create the request.
-request = "%s%s%s%s%s%s%s"%(tid, pid, length, func, adr, reg, count)
+request = "%s%s%s%s%s%s%s"%(tid, pid, length, adr, func, reg, count)
 print(request)
