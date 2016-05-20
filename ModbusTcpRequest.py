@@ -40,6 +40,35 @@ import random
 pid = "0000"
 length = "0006"
 
+# Check if a data type is valid.
+def ValidDataType(dataType):
+    # Create a list of all data types except the string types.
+    dataTypes = ["?", "b", "B", "h", "H", "i", "I", "q", "Q", "f", "d"]
+    
+    # Check if the data type is any of the none-string data types.
+    if dataType in dataTypes:
+        return True
+    
+    # Check if data type is a string.
+    elif 's' in dataType:
+        characters = dataType[1:]   # Get characters after 's'.
+        # Check if characters after 's' is a digit.
+        if characters.isdigit() == False:
+            print("Error: String data type's length is invalid.")
+            sys.exit()
+        value = int(characters)	# Get actual amount of characters.
+        # Check if the string's length is 0 or > 0xFF amount of characters.
+        if value == 0x00:
+            print("Too short string.")
+            sys.exit()
+        elif value > 0xFF:
+            print("Error: Too long string.")
+            sys.exit()
+        else:
+            return True
+    else:
+        return False
+
 # Gets the register count of a data type.
 def DataTypeRegisterCount(dataType):
 	if dataType == '?':		# BOOL.
@@ -68,7 +97,7 @@ def DataTypeRegisterCount(dataType):
 	elif 's' in dataType:
 		characters = dataType[1:]	# Get characters after 's'.
 		# Check if characters after 's' is a digit.
-		if charecters.isdigit() == False:
+		if characters.isdigit() == False:
 			print("Error: String data type's length is invalid.")
 			sys.exit()
 		value = int(characters)	# Get actual amount of characters.
@@ -82,7 +111,7 @@ def DataTypeRegisterCount(dataType):
 		elif value == 1:	# s1
 			return "0001"
 		else:
-			count = length / 2 # s2 to s255.
+			count = value / 2 # s2 to s255.
 			return "%04X"%(count)
 	else:
 		print("Error: Unknown data type.")
@@ -120,6 +149,11 @@ if register.isdigit == False or int(register) > 0xFFFF:
 	print("Error: Invalid register.")
 	sys.exit()
 
+# Check data type.
+if ValidDataType(dataType) == False:
+    print("Error: Invalid data type.")
+    sys.exit()
+    
 # Parse parameters to hex values.
 tid = "%04X"%(int(tid))                 # Get TID as four digit hex value.
 adr = "%02X"%(int(address))				# Get the address as two digit hex value.
