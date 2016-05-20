@@ -120,5 +120,5 @@ adr = "%04X"%(int(register))			# Get register as four digit hex value.
 count = DataTypeRegisterCount(dataType)	# Get register count based on data type.
 	
 # Create the request.
-request = "%s %s %s %s %s %s %s"%(tid, pid, length, adr, func, reg, count)
+request = "%s%s%s%s%s%s%s"%(tid, pid, length, func, adr, reg, count)
 print(request)
