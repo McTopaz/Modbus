@@ -112,7 +112,7 @@ def DataTypeRegisterCount(dataType):
 			return "0001"
 		else:
 			count = value / 2 # s2 to s255.
-			return "%04X"%(count)
+			return "%04X"%(value)
 	else:
 		print("Error: Unknown data type.")
 		sys.exit()
