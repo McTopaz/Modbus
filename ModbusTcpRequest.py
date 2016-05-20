@@ -2,11 +2,11 @@
 Creates a Modbus TCP request to read one single object.
 
 Input:
-	* address: The Modbus slave address.
-    * function: The Modbus function, in hex.
-	* register: The register to read from, in hex.
-	* data type: The data type to read, as a character. See data types.
-	Example: .\ModbusTcpRequest.py <function> <register> <data type>
+	* Address: The Modbus slave address.
+    * Function: The Modbus function, in hex.
+	* Register: The register to read from, in hex.
+	* Data type: The data type to read, as a character. See data types.
+	Example: .\ModbusTcpRequest.py <address> <function> <register> <data type>
 Output:
 	A string with the request in hex bytes.
 	Example: 0000000000060103000A0002
@@ -21,15 +21,14 @@ Data types:
 	* I = UINT32,	unsigned INT32
 	* q = INT64,	signed INT64
 	* Q = UINT64,	unsigned INT64
-	* f = REAL32,	32-bits float
-	* d = REAL64,	64
+	* f = REAL32,	32-bits real number (float)
+	* d = REAL64,	64-bits real number (double)
 	* s# = string,	with # amount of characters
 
 Request format:
 [TID TID] [PID PID] [LEN LEN] ADR FUNC [START START] [COUNT COUNT]
 
 Note:
-	* TID parameter is set to [0x00 0x00].
 	* PID parameter is set to [0x00 0x00].
 	* LEN is always 6 [0x00 0x06].
 '''
