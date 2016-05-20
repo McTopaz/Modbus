@@ -3,6 +3,7 @@ Creates a Modbus TCP request to read one single object.
 
 Input:
 	* function: The Modbus function, in hex.
+	* address: The Modbus slave address.
 	* register: The register to read from, in hex.
 	* data type: The data type to read, as a character. See data types.
 	Example: .\ModbusTcpRequest.py <function> <register> <data type>
@@ -31,7 +32,6 @@ Note:
 	* TID parameter is set to [0x00 0x00].
 	* PID parameter is set to [0x00 0x00].
 	* LEN is always 6 [0x00 0x06].
-	* ADR is always 0 [0x00]
 '''
 
 import sys
@@ -39,7 +39,6 @@ import sys
 tid = "0000"
 pid = "0000"
 length = "0006"
-adr = "00"
 
 # Gets the register count of a data type.
 def DataTypeRegisterCount(dataType):
@@ -90,28 +89,34 @@ def DataTypeRegisterCount(dataType):
 		sys.exit()
 
 # Check amount of args.
-if len(sys.argv) < 4:
+if len(sys.argv) < 5:
     print("Error: Too few arguments.")
     sys.exit()
 
 # Get arguments.
 function = sys.argv[1]	# The function.	
-register = sys.argv[2]	# The register.
-dataType = sys.argv[3]	# The data type.
+address = sys.argv[2]	# The address (slave address).
+register = sys.argv[3]	# The register.
+dataType = sys.argv[4]	# The data type.
 
 # Check function.
 if function.isdigit() == False or int(function) > 0xFF:
 	print("Error: Invalid function.")
 	sys.exit()
 
+if address.isdigit() == False or int(address) > 0xFF:
+	print("Error: Invalid address.")
+	sys.exit()
+	
 # Check register.
 if register.isdigit == False or int(register) > 0xFFFF:
 	print("Error: Invalid register.")
 	sys.exit()
 
 # Parse parameters to 
-func = "%02X"%(int(function))				# Get function as two digit long hex value.
-reg = "%04X"%(int(register))					# Get register as four digit long hex value.
+func = "%02X"%(int(function))			# Get function as two digit hex value.
+reg = "%02X"%(int(address))				# Get the address as two digit hex value.
+adr = "%04X"%(int(register))			# Get register as four digit hex value.
 count = DataTypeRegisterCount(dataType)	# Get register count based on data type.
 	
 # Create the request.
