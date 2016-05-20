@@ -35,8 +35,9 @@ Note:
 '''
 
 import sys
+import random
 
-tid = "0000"
+tid = random.randrange(0, 0x10000)  # Get a random number between 0x00 to 0xFFFF (0x10000-1).
 pid = "0000"
 length = "0006"
 
@@ -114,7 +115,8 @@ if register.isdigit == False or int(register) > 0xFFFF:
 	print("Error: Invalid register.")
 	sys.exit()
 
-# Parse parameters to 
+# Parse parameters to hex values.
+tid = "%04X"%(tid)                      # Get TID as four digit hex value.
 adr = "%02X"%(int(address))				# Get the address as two digit hex value.
 func = "%02X"%(int(function))			# Get function as two digit hex value.
 reg = "%04X"%(int(register))			# Get register as four digit hex value.
