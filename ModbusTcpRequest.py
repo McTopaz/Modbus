@@ -26,7 +26,7 @@ Data types:
 
 Request format:
 [TID TID] [PID PID] [LEN LEN] ADR FUNC [START START] [COUNT COUNT]
-	
+
 Note:
 	* TID parameter is set to [0x00 0x00].
 	* PID parameter is set to [0x00 0x00].
@@ -38,7 +38,7 @@ import sys
 
 tid = "0000"
 pid = "0000"
-len = "0006"
+length = "0006"
 adr = "00"
 
 # Gets the register count of a data type.
@@ -91,8 +91,8 @@ def DataTypeRegisterCount(dataType):
 
 # Check amount of args.
 if len(sys.argv) < 4:
-	print("Error: Too few arguments.")
-	sys.exit()
+    print("Error: Too few arguments.")
+    sys.exit()
 
 # Get arguments.
 function = sys.argv[1]	# The function.	
@@ -107,7 +107,7 @@ if function.isdigit() == False or int(function) > 0xFF:
 # Check register.
 if register.isdigit == False or int(register) > 0xFFFF:
 	print("Error: Invalid register.")
-	sus.exit()
+	sys.exit()
 
 # Parse parameters to 
 func = "%02X"%(int(function))				# Get function as two digit long hex value.
@@ -115,6 +115,5 @@ reg = "%04X"%(int(register))					# Get register as four digit long hex value.
 count = DataTypeRegisterCount(dataType)	# Get register count based on data type.
 	
 # Create the request.
-request ="hej"
-#request = "s% s% s% s% s% s% %s"%(tid, pid, len, adr, func, reg, count)
+request = "%s %s %s %s %s %s %s"%(tid, pid, length, adr, func, reg, count)
 print(request)
