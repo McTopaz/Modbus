@@ -2,14 +2,15 @@
 Creates a Modbus TCP request to read one single object.
 
 Input:
-	* Address: The Modbus slave address.
+	* TID: The transmission identifier.
+    * Address: The Modbus slave address.
     * Function: The Modbus function, in hex.
 	* Register: The register to read from, in hex.
 	* Data type: The data type to read, as a character. See data types.
-	Example: .\ModbusTcpRequest.py <address> <function> <register> <data type>
+	Example: .\ModbusTcpRequest.py <tid> <address> <function> <register> <data type>
 Output:
 	A string with the request in hex bytes.
-	Example: 0000000000060103000A0002
+	Example: 0000000000060103000A0002.
 
 Data types:
 	* ? = bool,		represented as unsigned INT8
@@ -36,7 +37,6 @@ Note:
 import sys
 import random
 
-tid = random.randrange(0, 0x10000)  # Get a random number between 0x00 to 0xFFFF (0x10000-1).
 pid = "0000"
 length = "0006"
 
@@ -89,15 +89,21 @@ def DataTypeRegisterCount(dataType):
 		sys.exit()
 
 # Check amount of args.
-if len(sys.argv) < 5:
+if len(sys.argv) < 6:
     print("Error: Too few arguments.")
     sys.exit()
 
 # Get arguments.
-address = sys.argv[1]	# The address (slave address).
-function = sys.argv[2]	# The function.	
-register = sys.argv[3]	# The register.
-dataType = sys.argv[4]	# The data type.
+tid = sys.argv[1]       # The TID.
+address = sys.argv[2]	# The address (slave address).
+function = sys.argv[3]	# The function.	
+register = sys.argv[4]	# The register.
+dataType = sys.argv[5]	# The data type.
+
+# Check TID.
+if tid.isdigit() == False or int(tid) > 0xFFFF:
+    print("Error: Invalid TID.")
+    sys.exit()
 
 # Check address.
 if address.isdigit() == False or int(address) > 0xFF:
@@ -115,7 +121,7 @@ if register.isdigit == False or int(register) > 0xFFFF:
 	sys.exit()
 
 # Parse parameters to hex values.
-tid = "%04X"%(tid)                      # Get TID as four digit hex value.
+tid = "%04X"%(int(tid))                 # Get TID as four digit hex value.
 adr = "%02X"%(int(address))				# Get the address as two digit hex value.
 func = "%02X"%(int(function))			# Get function as two digit hex value.
 reg = "%04X"%(int(register))			# Get register as four digit hex value.
