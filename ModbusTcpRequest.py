@@ -71,51 +71,56 @@ def ValidDataType(dataType):
 
 # Gets the register count of a data type.
 def DataTypeRegisterCount(dataType):
-	if dataType == '?':		# BOOL.
-		return "0001"
-	elif dataType == 'b':	# INT8.
-		return "0001"
-	elif dataType == 'B':	# UINT8.
-		return "0001"
-	elif dataType == 'h':	# INT16.
-		return "0001"
-	elif dataType == 'H':	# UINT16.
-		return "0001"
-	elif dataType == 'i':	# INT32.
-		return "0002"
-	elif dataType == 'I':	# UINT32.
-		return "0002"
-	elif dataType == 'q':	# INT64.
-		return "0004"
-	elif dataType == 'Q':	# UINT64.
-		return "0004"
-	elif dataType == 'f':	# REAL32.
-		return "0002"
-	elif dataType == 'd':	# REAL64.
-		return "0004"
+    if dataType == '?':		# BOOL.
+        return "0001"
+    elif dataType == 'b':	# INT8.
+        return "0001"
+    elif dataType == 'B':	# UINT8.
+        return "0001"
+    elif dataType == 'h':	# INT16.
+        return "0001"
+    elif dataType == 'H':	# UINT16.
+        return "0001"
+    elif dataType == 'i':	# INT32.
+        return "0002"
+    elif dataType == 'I':	# UINT32.
+        return "0002"
+    elif dataType == 'q':	# INT64.
+        return "0004"
+    elif dataType == 'Q':	# UINT64.
+        return "0004"
+    elif dataType == 'f':	# REAL32.
+        return "0002"
+    elif dataType == 'd':	# REAL64.
+        return "0004"
 	# String data type.
-	elif 's' in dataType:
-		characters = dataType[1:]	# Get characters after 's'.
-		# Check if characters after 's' is a digit.
-		if characters.isdigit() == False:
-			print("Error: String data type's length is invalid.")
-			sys.exit()
-		value = int(characters)	# Get actual amount of characters.
-		# Check if the string's length is 0 or > 0xFF amount of characters.
-		if value == 0x00:
-			print("Too short string.")
-			sys.exit()
-		elif value > 0xFF:
-			print("Error: Too long string.")
-			sys.exit()
-		elif value == 1:	# s1
-			return "0001"
-		else:
-			count = value / 2 # s2 to s255.
-			return "%04X"%(value)
-	else:
-		print("Error: Unknown data type.")
-		sys.exit()
+    elif 's' in dataType:
+        characters = dataType[1:]	# Get characters after 's'.
+        # Check if characters after 's' is a digit.
+        if characters.isdigit() == False:
+            print("Error: String data type's length is invalid.")
+            sys.exit()
+        value = int(characters)	# Get actual amount of characters.
+        # Check if the string's length is 0 or > 0xFF amount of characters.
+        if value == 0x00:
+            print("Too short string.")
+            sys.exit()
+        elif value > 0xFF:
+            print("Error: Too long string.")
+            sys.exit()
+        elif value == 1:	# s1
+            return "0001"
+        else:
+            # s2 to s255.
+            count = 0
+            if value % 2 == 0:
+                count = value / 2 
+            else:
+                count = (value / 2) + 1
+            return "%04X"%(count)
+    else:
+        print("Error: Unknown data type.")
+        sys.exit()
 
 # Check amount of args.
 if len(sys.argv) < 6:
@@ -136,18 +141,18 @@ if tid.isdigit() == False or int(tid) > 0xFFFF:
 
 # Check address.
 if address.isdigit() == False or int(address) > 0xFF:
-	print("Error: Invalid address.")
-	sys.exit()
+    print("Error: Invalid address.")
+    sys.exit()
 
 # Check function.
 if function.isdigit() == False or int(function) > 0xFF:
-	print("Error: Invalid function.")
-	sys.exit()
+    print("Error: Invalid function.")
+    sys.exit()
 	
 # Check register.
 if register.isdigit == False or int(register) > 0xFFFF:
-	print("Error: Invalid register.")
-	sys.exit()
+    print("Error: Invalid register.")
+    sys.exit()
 
 # Check data type.
 if ValidDataType(dataType) == False:
