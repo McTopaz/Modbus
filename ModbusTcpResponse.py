@@ -27,8 +27,13 @@ Data types:
 	* d = REAL64,	64-bits real number (double)
 	* s# = string,	with # amount of characters
 
-Response format:
-[TID TID] [PID PID] [LEN LEN] ADR FUNC COUNT [DATA DATA]
+Positive response format:
+[TID TID] [PID PID] [LEN LEN] ADR FUNC COUNT [    DATA   ]
+  00  00    00  00    00  07   00   03    04  01 00 00 90
+
+Negative response format:
+[TID TID] [PID PID] [LEN LEN] ADR FUNC ERROR
+  00  00    00  00    00  03   00   83    02 
 '''
 
 import sys
@@ -62,6 +67,103 @@ def ValidDataType(dataType):
     else:
         return False
 
+# Parse the package into a byte-array.
+def ParsePackageToData(package):
+    data = []
+
+    # Iterate over every other characters.
+    for start in range(0, len(package), 2):
+
+        # Try to convert hex string to int.
+        try:
+            temp = int(package[start:start + 2], 16)
+            data.append(temp)
+        except:
+            print("Error: '%s' contains a none hexadecimal number."%(package[1]))
+            sys.exit()
+     
+    return data
+
+# Get how many bytes there is for a specific data type.
+def DataTypeByteCount(dataType):
+    if dataType == '?':		# BOOL.
+        return 1
+    elif dataType == 'b':	# INT8.
+        return 1
+    elif dataType == 'B':	# UINT8.
+        return 1
+    elif dataType == 'h':	# INT16.
+        return 2
+    elif dataType == 'H':	# UINT16.
+        return 2
+    elif dataType == 'i':	# INT32.
+        return 4
+    elif dataType == 'I':	# UINT32.
+        return 4
+    elif dataType == 'q':	# INT64.
+        return 8
+    elif dataType == 'Q':	# UINT64.
+        return 8
+    elif dataType == 'f':	# REAL32.
+        return 4
+    elif dataType == 'd':	# REAL64.
+        return 8
+	# String data type.
+    elif 's' in dataType:
+        characters = dataType[1:]	# Get characters after 's'.
+        value = int(characters)	# Get actual amount of characters.
+
+        if value == 1:	# s1
+            return 1
+        else:
+            # s2 to s255.
+            count = 0
+            if value % 2 == 0:
+                count = value / 2 
+            else:
+                count = (value / 2) + 1
+            return count
+
+# Get value based on data type.
+def ValueFromDataType(dataType, data):
+    if dataType == '?':		# BOOL.
+        return data & 0x01 == 1
+    elif dataType == 'b':	# INT8.
+        return data if data <= 0x7F else ((0xFF-data) * (-1))
+    elif dataType == 'B':	# UINT8.
+        return data
+    elif dataType == 'h':	# INT16.
+        return data if data <= 0x7FFF else ((0xFFFF-data) * (-1))
+    elif dataType == 'H':	# UINT16.
+        return 2
+    elif dataType == 'i':	# INT32.
+        return data if data <= 0x7FFFFFFF else ((0xFFFFFFFF-data) * (-1))
+    elif dataType == 'I':	# UINT32.
+        return 4
+    elif dataType == 'q':	# INT64.
+        return data if data <= 0x7FFFFFFFFFFFFFFF else ((0xFFFFFFFFFFFFFFFF-data) * (-1))
+    elif dataType == 'Q':	# UINT64.
+        return 8
+    elif dataType == 'f':	# REAL32.
+        return 4
+    elif dataType == 'd':	# REAL64.
+        return 8
+	# String data type.
+    elif 's' in dataType:
+        characters = dataType[1:]	# Get characters after 's'.
+        value = int(characters)	# Get actual amount of characters.
+
+        if value == 1:	# s1
+            return 1
+        else:
+            # s2 to s255.
+            count = 0
+            if value % 2 == 0:
+                count = value / 2 
+            else:
+                count = (value / 2) + 1
+            return count
+        
 # Check arguments.
 if len(sys.argv) < 4:
     print("Error: Too few arguments.")
@@ -75,30 +177,67 @@ dataType = sys.argv[2]  # Get the data type.
 if tid.isdigit() == False or int(tid) > 0xFFFF:
     print("Error: Invalid TID.")
     sys.exit()
+tid = int(tid, 16)  # Convert to int.
     
 # Check data type.
 if ValidDataType(dataType) == False:
     print("Error: Invalid data type.")
     sys.exit()
 
-sys.exit()
+# Get response from arguments.
+response = ParsePackageToData(sys.argv[3])
+print(response)
     
 # Check response.
-if len(response) < 11:
+if len(response) < 9:
     print("Invalid response length.")
     sys.exit()
+
+TID = (256*response[0]) + response[1]
+PID = (256*response[2]) + response[3]
+LEN = (256*response[4]) + response[5]
+ADR = response[6]
+FUNC = response[7]
+
+#print("TID: %s"%(TID))
+#print("PID: %s"%(PID))
+#print("LEN: %s"%(LEN))
+#print("ADR: %s"%(ADR))
+#print("FUNC: %s"%(FUNC))
+
+# Check if TID in response is same as argument.
+if tid != TID:
+    print("Error: TID in response is not equal to TID in request.")
+    sys.exit()
+ 
+# Get if response is ACK or NAK.
+isACK = (FUNC & 0x80) < 0x80
+isNAK = (FUNC & 0x80) > 0x80
+
+# Parse positive response.
+if isACK:
     
-   # Get response from arguments.
-response = []
-
-# Iterate over every other characters.
-for start in range(0, len(sys.argv[3]), 2):
-
-    # Try to convert hex string to int.
-    try:
-        temp = int(sys.argv[1][start:start + 2], 16)
-        response.append(temp)
-    except:
-        print("Error: '%s' contains a non hexadecimal number."%(sys.argv[1]))
+    bytes = DataTypeByteCount(dataType)
+    #print(len(response[6:]))
+    #print(len(response[9:]))
+    
+    # Check if the LEN's value is equal to total bytes of (ADR+FUCN+COUNT+DATA).
+    if len(response[6:]) != LEN:
+        print("Error: Response's LEN is not equal to bytes in ADR, FUNC, COUNT and DATA.")
         sys.exit()
-        
+    # Check if the COUNT value is equal to total bytes of DATA.
+    elif len(response[9:]) != bytes:
+        print("Error: Response's COUNT is not equal to bytes in DATA")
+        sys.exit()
+    
+    value = ValueFromDataType(dataType, response[9:])
+    print("[ACK] %s"%(value))
+    
+# Parse negative response.
+elif isNAk:
+    pass
+    
+# Unknown response.
+else:
+    print("Error: Unknown response.")
+    sys.exit()
