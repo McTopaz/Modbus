@@ -120,7 +120,7 @@ def DataTypeByteCount(dataType):
             # s2 to s255.
             count = 0
             if value % 2 == 0:
-                count = value / 2 
+                count = value
             else:
                 count = (value / 2) + 1
             return count
@@ -156,7 +156,9 @@ def ValueFromDataType(dataType, data):
 	# String data type.
     elif 's' in dataType:
         characters = dataType[1:]	# Get characters after 's'.
+        print("chrs: " + characters)
         value = int(characters)	# Get actual amount of characters.
+        print("val: %s"%value)
 
         if value == 1:	# s1
             return 1
