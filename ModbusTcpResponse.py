@@ -37,6 +37,7 @@ Negative response format:
 '''
 
 import sys
+import struct
 
 # Check if a data type is valid.
 def ValidDataType(dataType):
@@ -133,7 +134,8 @@ def ValueFromDataType(dataType, data):
     elif dataType == 'B':	# UINT8.
         return int.from_bytes(data, byteorder='big', signed=False)
     elif dataType == 'h':	# INT16.
-        return int.from_bytes(data, byteorder='big', signed=True)
+        key = struct.pack('B' * len(data), *data)
+        return struct.unpack('>h', key)
     elif dataType == 'H':	# UINT16.
         return int.from_bytes(data, byteorder='big', signed=False)
     elif dataType == 'i':	# INT32.
@@ -145,9 +147,12 @@ def ValueFromDataType(dataType, data):
     elif dataType == 'Q':	# UINT64.
         return int.from_bytes(data, byteorder='big', signed=False)
     elif dataType == 'f':	# REAL32.
-        return 4
+        key = struct.pack('B' * len(data), *data)
+        return struct.unpack('f', key)
     elif dataType == 'd':	# REAL64.
-        return 8
+        key = struct.pack('B' * len(data), *data)
+        return struct.unpack('d', key)
+        
 	# String data type.
     elif 's' in dataType:
         characters = dataType[1:]	# Get characters after 's'.
