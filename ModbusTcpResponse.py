@@ -127,23 +127,23 @@ def DataTypeByteCount(dataType):
 # Get value based on data type.
 def ValueFromDataType(dataType, data):
     if dataType == '?':		# BOOL.
-        return data & 0x01 == 1
+        return data[0] > 0x00
     elif dataType == 'b':	# INT8.
-        return data if data <= 0x7F else ((0xFF-data) * (-1))
+        return int.from_bytes(data, byteorder='big', signed=True)
     elif dataType == 'B':	# UINT8.
-        return data
+        return int.from_bytes(data, byteorder='big', signed=False)
     elif dataType == 'h':	# INT16.
-        return data if data <= 0x7FFF else ((0xFFFF-data) * (-1))
+        return int.from_bytes(data, byteorder='big', signed=True)
     elif dataType == 'H':	# UINT16.
-        return 2
+        return int.from_bytes(data, byteorder='big', signed=False)
     elif dataType == 'i':	# INT32.
-        return data if data <= 0x7FFFFFFF else ((0xFFFFFFFF-data) * (-1))
+        return int.from_bytes(data, byteorder='big', signed=True)
     elif dataType == 'I':	# UINT32.
-        return 4
+        return int.from_bytes(data, byteorder='big', signed=False)
     elif dataType == 'q':	# INT64.
-        return data if data <= 0x7FFFFFFFFFFFFFFF else ((0xFFFFFFFFFFFFFFFF-data) * (-1))
+        return int.from_bytes(data, byteorder='big', signed=True)
     elif dataType == 'Q':	# UINT64.
-        return 8
+        return int.from_bytes(data, byteorder='big', signed=False)
     elif dataType == 'f':	# REAL32.
         return 4
     elif dataType == 'd':	# REAL64.
