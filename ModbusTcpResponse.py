@@ -142,9 +142,9 @@ def ValueFromDataType(dataType, data):
     elif dataType == 'Q':	# UINT64.
         return struct.unpack('>Q', data)
     elif dataType == 'f':	# REAL32.
-        return struct.unpack('f', data)
+        return struct.unpack('>f', data)
     elif dataType == 'd':	# REAL64.
-        return struct.unpack('d', data)
+        return struct.unpack('>d', data)
         
 	# String data type.
     elif 's' in dataType:
