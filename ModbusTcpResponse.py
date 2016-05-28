@@ -70,17 +70,17 @@ def ValidDataType(dataType):
 
 # Parse the package into a byte-array.
 def ParsePackageToData(package):
-    data = []
+    data = b""
 
     # Iterate over every other characters.
-    for start in range(0, len(package), 2):
+    for i in range(int(len(package)/2)):
 
         # Try to convert hex string to int.
         try:
-            temp = int(package[start:start + 2], 16)
-            data.append(temp)
+            temp = int(package[2*i:2*i+2], 16)
+            data += struct.pack("B",temp)
         except:
-            print("Error: '%s' contains a none hexadecimal number."%(package[1]))
+            print("Error: '%s' contains a none hexadecimal number."%(package[i]))
             sys.exit()
      
     return data
@@ -112,7 +112,9 @@ def DataTypeByteCount(dataType):
 	# String data type.
     elif 's' in dataType:
         characters = dataType[1:]	# Get characters after 's'.
+        print(characters)
         value = int(characters)	# Get actual amount of characters.
+        print("value = %d"%value)
         if value == 1:	# s1
             return 1
         else:
@@ -122,6 +124,7 @@ def DataTypeByteCount(dataType):
                 count = value
             else:
                 count = (value / 2) + 1
+            print("count = %f"%count)
             return count
 
 # Get value based on data type.
@@ -133,24 +136,21 @@ def ValueFromDataType(dataType, data):
     elif dataType == 'B':	# UINT8.
         return int.from_bytes(data, byteorder='big', signed=False)
     elif dataType == 'h':	# INT16.
-        key = struct.pack('B' * len(data), *data)
-        return struct.unpack('>h', key)
+        return struct.unpack('>h', data)
     elif dataType == 'H':	# UINT16.
-        return int.from_bytes(data, byteorder='big', signed=False)
+        return struct.unpack('>H', data)
     elif dataType == 'i':	# INT32.
-        return int.from_bytes(data, byteorder='big', signed=True)
+        return struct.unpack('>i', data)
     elif dataType == 'I':	# UINT32.
-        return int.from_bytes(data, byteorder='big', signed=False)
+        return struct.unpack('>I', data)
     elif dataType == 'q':	# INT64.
-        return int.from_bytes(data, byteorder='big', signed=True)
+        return struct.unpack('>q', data)
     elif dataType == 'Q':	# UINT64.
-        return int.from_bytes(data, byteorder='big', signed=False)
+        return struct.unpack('>Q', data)
     elif dataType == 'f':	# REAL32.
-        key = struct.pack('B' * len(data), *data)
-        return struct.unpack('f', key)
+        return struct.unpack('f', data)
     elif dataType == 'd':	# REAL64.
-        key = struct.pack('B' * len(data), *data)
-        return struct.unpack('d', key)
+        return struct.unpack('d', data)
         
 	# String data type.
     elif 's' in dataType:
@@ -212,6 +212,7 @@ if isACK:
     bytes = DataTypeByteCount(dataType)
     #print(len(response[6:]))
     #print(len(response[9:]))
+    print(bytes)
     
     # Check if the LEN's value is equal to total bytes of (ADR+FUCN+COUNT+DATA).
     if len(response[6:]) != LEN:
