@@ -132,9 +132,9 @@ def ValueFromDataType(dataType, data):
     if dataType == '?':		# BOOL.
         return data[0] > 0x00
     elif dataType == 'b':	# INT8.
-        return int.from_bytes(data, byteorder='big', signed=True)
+        return struct.unpack('>b', data)
     elif dataType == 'B':	# UINT8.
-        return int.from_bytes(data, byteorder='big', signed=False)
+        return struct.unpack('>B', data)
     elif dataType == 'h':	# INT16.
         return struct.unpack('>h', data)
     elif dataType == 'H':	# UINT16.
