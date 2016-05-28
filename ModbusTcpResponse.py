@@ -112,20 +112,14 @@ def DataTypeByteCount(dataType):
 	# String data type.
     elif 's' in dataType:
         characters = dataType[1:]	# Get characters after 's'.
-        print(characters)
         value = int(characters)	# Get actual amount of characters.
-        print("value = %d"%value)
-        if value == 1:	# s1
-            return 1
-        else:
-            # s2 to s255.
-            count = 0
-            if value % 2 == 0:
-                count = value
-            else:
-                count = (value / 2) + 1
-            print("count = %f"%count)
-            return count
+        
+        # Round up uneven length strings: s3 = s4.
+        if value % 2 != 0:
+            value = value + 1
+            
+        value *= 2  # Double the byte count since Modbus use two bytes per register.
+        return value
 
 # Get value based on data type.
 def ValueFromDataType(dataType, data):
@@ -178,8 +172,7 @@ if ValidDataType(dataType) == False:
 
 # Get response from arguments.
 response = ParsePackageToData(sys.argv[3])
-print(response)
-    
+
 # Check response.
 if len(response) < 9:
     print("Invalid response length.")
@@ -210,9 +203,6 @@ isNAK = (FUNC & 0x80) > 0x80
 if isACK:
     
     bytes = DataTypeByteCount(dataType)
-    #print(len(response[6:]))
-    #print(len(response[9:]))
-    print(bytes)
     
     # Check if the LEN's value is equal to total bytes of (ADR+FUCN+COUNT+DATA).
     if len(response[6:]) != LEN:
