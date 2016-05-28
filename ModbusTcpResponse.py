@@ -149,7 +149,32 @@ def ValueFromDataType(dataType, data):
 	# String data type.
     elif 's' in dataType:
         return "".join(chr(i) for i in data)
-        
+
+# Look up an error message based on the error code.        
+def LookupErrorMessage(errorCode):
+    if errorCode == 0x01:
+        return "Illegal function.";
+    elif errorCode == 0x02:
+        return "Illegal data address.";
+    elif errorCode == 0x03:
+        return "Illegal data value.";
+    elif errorCode == 0x04:
+        return "Slave device failure.";
+    elif errorCode == 0x05:
+        return "Acknowledge.";
+    elif errorCode == 0x06:
+        return "Slave device busy.";
+    elif errorCode == 0x07:
+        return "Negative acknowledge.";
+    elif errorCode == 0x08:
+        return "Memory parity error.";
+    elif errorCode == 0x0A:
+        return "Gateway path unavailable.";
+    elif errorCode == 0x0B:
+        return "Gateway target device failed to respond.";
+    else:
+        return "Unknown error code received.";
+
 # Check arguments.
 if len(sys.argv) < 4:
     print("Error: Too few arguments.")
@@ -201,12 +226,11 @@ if tid != TID:
     sys.exit()
  
 # Get if response is ACK or NAK.
-isACK = (FUNC & 0x80) < 0x80
-isNAK = (FUNC & 0x80) > 0x80
+isACK = FUNC < 0x80
+isNAK = FUNC > 0x80
 
 # Parse positive response.
 if isACK:
-    
     bytes = DataTypeByteCount(dataType)
     
     # Check if the LEN's value is equal to total bytes of (ADR+FUCN+COUNT+DATA).
@@ -222,8 +246,11 @@ if isACK:
     print("[ACK] %s"%(value))
     
 # Parse negative response.
-elif isNAk:
-    pass
+elif isNAK:
+
+    errorCode = response[8]                         # Gets the error code.
+    errorMessage = LookupErrorMessage(errorCode)    # Gets the error message.
+    print("[NAK]: %s"%(errorMessage))
     
 # Unknown response.
 else:
