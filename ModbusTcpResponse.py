@@ -173,6 +173,11 @@ if ValidDataType(dataType) == False:
 # Get response from arguments.
 response = ParsePackageToData(sys.argv[3])
 
+# Make sure response is even byte length.
+if len(response) % 2 == 0:
+    print("Error: Response length is uneven. Missing nibble in byte.")
+    sys.exit()
+
 # Check response.
 if len(response) < 9:
     print("Invalid response length.")
