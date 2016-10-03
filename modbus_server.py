@@ -79,7 +79,7 @@ def DefineRegisters():
     registers[43] = CreateRegisterValue(5, bytearray("ABCDEFGHIJ", 'ascii'))        # STR10
     registers[48] = CreateRegisterValue(6, bytearray("ABCDEFGHIJKL", 'ascii'))      # STR12
     return registers
-
+    
 def PrintData(data):
     tstr = ""
     for j in range(len(data)):
@@ -100,8 +100,16 @@ def Execute(request):
         print("Invalid data protocol")
         sys.exit()
     
+    print("Request")
+    PrintData(request)
+    
     server.ParseRequest(request)
     response = server.CreateResponse()
+    
+    print("")
+    print("Reponse")
+    PrintData(response)
+    
     return response
 
 #=== Servers ==================================================================
@@ -129,29 +137,42 @@ class ModbusRequest():
         self.start = struct.unpack('>h',  data[2:4])[0]
         self.count = struct.unpack('>h',  data[4:6])[0]
         self.valid = False
+        self.errorCode = 0
         
     def ValidateRequest(self):
-        # Overload in sub class.
+        # override in sub class.
         pass
         
-    def IsRegisterDefined(self):
-        start = self.start
-        count = self.count
-        return start in registers and count in registers[start]
-        
+    def SetErrorCode(self, okLength, okSlaveAddress, okFunction, okCrc, okRegister):
+        # Illegal function.
+        if okFunction == False:
+            self.errorCode = 0x01
+        # Illegal data address.
+        elif okRegister == False:
+            self.errorCode = 0x02
+        # Illegat data value.
+        elif okCrc == False or okLength == False:
+            self.errorCode = 0x03
+        # Gateway target device failed to respond.
+        elif okSlaveAddress == False:
+            self.errorCode = 0x11
+
 class ModbusRtuRequest(ModbusRequest):
     def __init__(self,  data):
         ModbusRequest.__init__(self, data, data[0:6])
-        self.crc = struct.unpack('h', data[6:8])[0]
+        self.crc = struct.unpack('H', data[6:8])[0]
         
     def ValidateRequest(self):
-        PrintData(self.request)
         calcedCrc = self.CalculateCRC(self.request[0:6])
         okLength = len(self.request) == 8
         okSlaveAddress = self.slaveAddress == slaveAddress
         okFunction = self.function == 0x03 or self.function == 0x04
         okCrc = calcedCrc == self.crc
-        self.valid = okLength and okSlaveAddress and okFunction and okCrc
+        okRegister = self.start in registers and self.count in registers[self.start]
+        self.valid = okLength and okSlaveAddress and okFunction and okCrc and okRegister
+
+        if self.valid == False:
+            self.SetErrorCode(okLength, okSlaveAddress, okFunction, okCrc, okRegister)
         
     def CalculateCRC(self,  data):
         crc = 0xFFFF
@@ -173,7 +194,11 @@ class ModbusTcpRequest(ModbusRequest):
         okLength = len(self.request) == (6 + self.count)
         okSlaveAddress = self.slaveAddress == slaveAddress
         okFunction = self.function == 0x03 or self.function == 0x04
-        return okLength and okSlaveAddress and okFunction
+        okRegister = self.start in registers and self.count in registers[self.start]
+        self.valid = okLength and okSlaveAddress and okFunction and okRegister
+        
+        if self.valid == False:
+            self.SetErrorCode(okLength, okSlaveAddress, okFunction, True, okRegister)
     
 #=== Modbus response ==========================================================
 
@@ -181,6 +206,14 @@ class ModbusResponse():
     def __init__(self,  slaveAddress, function):
         self.slaveAddress = slaveAddress
         self.function = function
+        
+    def CreatePositiveResponse(self, data):
+        # override in sub class.
+        pass
+        
+    def CreateNegativeResponse(self, error):
+        # override in sub class.
+        pass
 
 class ModbusRtuResponse(ModbusResponse):
     def __init__(self,  slaveAddress, function):
@@ -194,7 +227,7 @@ class ModbusRtuResponse(ModbusResponse):
         return response
         
     def CreateNegativeResponse(self, error):
-        response = struct.pack("BBB", self.slaveAddress, self.function, error)
+        response = struct.pack("BBB", self.slaveAddress, (0x80 + self.function), error)
         crc = self.CalculateCRC(response)
         response += struct.pack("H", crc)
         return response
@@ -229,32 +262,35 @@ class ModbusServer():
         self.response = 0
         
     def ParseRequest(self,  request):
-        # Overload in sub class.
+        # override in sub class.
         pass
         
     def AcceptableRequest(self):
         self.request.ValidateRequest()
         print("Request is valid: %s"%(self.request.valid))
-        defined = self.request.IsRegisterDefined()
+        
+        start = self.request.start
+        count = self.request.count
+        defined = start in registers and count in registers[start]
         print("Register is defined: %s"%(defined))
+        
         return self.request.valid and defined
       
     def CreateResponse(self):
-        if (self.AcceptableRequest):
+        if (self.AcceptableRequest()):
             print("Start: %s"%self.request.start)
             print("Count: %s"%self.request.count)
             data = registers[self.request.start][self.request.count]
             PrintData(data)
             return self.response.CreatePositiveResponse(data)
         else:
-            error = 0
-            return self.response.CreateNegativeResponse(error)
+            return self.response.CreateNegativeResponse(self.request.errorCode)
 
 class ModbusRtuServer(ModbusServer):
     def __init__(self,):
         ModbusServer.__init__(self)
         
-    def ParseRequest(self,  request):
+    def ParseRequest(self, request):
         self.request = ModbusRtuRequest(request)
         self.response = ModbusRtuResponse(self.request.slaveAddress, self.request.function)
         
